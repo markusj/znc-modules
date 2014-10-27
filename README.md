@@ -9,7 +9,7 @@ Contains (at the time this README has been updated):
 
 ## timer.py
 
-Usage: 
+Requires ZNC >= 1.5 (the hook OnSendToIRC() which is required to intercept raw IRC commands is supported in ZNC master since 2014-03-04)
 
 This module can only be loaded as network module. It will forward the passed `<COMMAND>` with a delay of `<DELAY>` seconds to IRC network `<NETWORK>`.
 
