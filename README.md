@@ -24,7 +24,7 @@ and raw IRC commands (as sent by send_raw or perform).
 
 ## awaymonitor.py
 
-Requires ZNC >= 1.x (the module will most likely work with older releases, but argument passing requires a patch: markusj/znc@79d8ae7432e581e27e40ba19bac4c1161126f8d0)
+Requires ZNC >= 1.5 (passing arguments to Python modules has been broken before 2014-10-29)
 
 This module is intented for setups as shown in the [ZNC FAQ](http://wiki.znc.in/FAQ#How_to_store_private_messages_even_when_user_is_attached.2C_so_other_clients_can_see_them.3F). It will set your main user away if each of the connected clients is set away with message "detached" or if any client sets another away message. The module will remember the away state and restore it in case of an IRC reconnect. Together with the module `simple_away` it can be used to forward the auto-away-state to the main user if the last client has been disconnected/detached.
 
