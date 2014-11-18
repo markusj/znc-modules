@@ -731,19 +731,20 @@ class titlebot(znc.Module):
 	def OnPrivMsg(self, nick, sMessage): # EModRet OnPrivMsg (CNick &Nick, CString &sMessage)
 		message = str(sMessage)
 		
-		if len(message) > 1 and message[0] == self.activator:
-			message = message[1:]
-		
 		self.parseMessage(message, nick)
 		
 		return znc.HALTCORE
 	
 	
 	def OnChanMsg(self, nick, channel, sMessage): #EModRet OnChanMsg (CNick &Nick, CChan &Channel, CString &sMessage)
+		sChan = str(channel.GetName())
 		message = str(sMessage)
 		
-		if len(message) > 1 and message[0] == self.activator:
-			self.parseMessage(message[1:], nick, channel)
+		if sChan in self.chans:
+			chan = self.chans[sChan]
+			
+			if len(message) > 1 and message[0] == chan.activator:
+				self.parseMessage(message[1:], nick, channel)
 		
 		return znc.HALTCORE
 	
