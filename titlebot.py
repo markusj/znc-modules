@@ -505,21 +505,28 @@ class titlebot(znc.Module):
 	
 	# to: string, chan: ChanInfo
 	def printHelp(self, to, chan, admin=False):
-		self.sendmsg(to, "If you send command from a channel, you need to prepend the character " + chan.activator + " to the commands below")
+		self.sendmsg(to, "If you send a command from a channel, you need to prepend the character " + chan.activator)
 		self.sendmsg(to, "The argument <channel> is only required if you send the command as query/direct message.")
 		self.sendmsg(to, "Arguments in [square brackets] are optional, the vertical bar | aka \"pipe\" denotes a choice between options")
-		self.sendmsg(to, "    help <channel>" + " [public | admin]" if admin else "")
-		self.sendmsg(to, "    vote <channel> <option_id>          Vote for option <option_id>")
-		self.sendmsg(to, "    revoke <channel>" + (" [<user_id>]" if admin else "") + "          Revoke vote")
-		self.sendmsg(to, "    add <channel> <option_text>          Add voting option with <option_text>")
-		if admin:
-			self.sendmsg(to, "    del <channel> <option_id>          Delete voting option <option_id>")
-		self.sendmsg(to, "    auth <channel>          Authentify yourself. Use this if you identified yourself to NickServ after you have used this bot. Prevents others from stealing your vote")
-		if admin:
-			self.sendmsg(to, "    enable <channel>          Enable/resume voting.")
-			self.sendmsg(to, "    disable <channel>          Disable/pause voting. The vote can be continued later")
-			self.sendmsg(to, "    reset <channel>          Resets the voting, drops all options and votes")
-		self.sendmsg(to, "    list <channel>" + (" [results | votes | users] [public]" if admin else "") + "          Lists all voting options")
+
+		self.sendmsg(to, "  help   <channel>")
+		self.sendmsg(to, "  vote   <channel> <option_id>     Vote for option <option_id>")
+		self.sendmsg(to, "  revoke <channel>                 Revoke vote")
+		self.sendmsg(to, "  add    <channel> <option_text>   Add voting option with <option_text>")
+		self.sendmsg(to, "  list   <channel>                 Lists all voting options")
+		self.sendmsg(to, "  auth   <channel>                 Authentify yourself. Use this if you identified yourself to NickServ after you have used this bot. Prevents others from stealing your vote")
+		
+		if not admin:
+			return # do not print admin help
+		
+		self.sendmsg(to, "Additional or enhanced commands for administrators only")
+		self.sendmsg(to, "  help    <channel> [public | admin]  Print help public in channel or print admin help")
+		self.sendmsg(to, "  revoke  <channel> [<user_id>]       Revoke vote")
+		self.sendmsg(to, "  del     <channel> <option_id>       Delete voting option <option_id>")
+		self.sendmsg(to, "  enable  <channel>                   Enable/resume voting.")
+		self.sendmsg(to, "  disable <channel>                   Disable/pause voting. Voting might be continued later")
+		self.sendmsg(to, "  reset   <channel>                   Resets the voting, drops all options and votes")
+		self.sendmsg(to, "  list    <channel> [results | votes | users] [public]  Lists voting results, votes or users, optionally public in channel")
 	
 	
 	# sNick: string
@@ -597,7 +604,7 @@ class titlebot(znc.Module):
 		result = chanInfo.addOption(option)
 		
 		if result >= 0:
-			self.sendmsg(chanInfo.name, "Option " + str(result + 1) + " added: " + option)
+			self.sendmsg(chanInfo.name, "----- Option " + str(result + 1) + " added: " + option)
 		else:
 			self.sendmsg(sNick, "Failed to add option")
 	
@@ -610,9 +617,9 @@ class titlebot(znc.Module):
 			for uid in revoked:
 				userInfo = self.userdb[uid]
 				
-				self.sendmsg(chanInfo.name, "Vote from user " + userInfo.nick + " for option " + str(option) + " has been revoked")
+				self.sendmsg(chanInfo.name, "----- Vote from user " + userInfo.nick + " for option " + str(option) + " has been revoked -----")
 				
-			self.sendmsg(chanInfo.name, "Option " + str(option) + " has been deleted from admin " + sNick)
+			self.sendmsg(chanInfo.name, "----- Option " + str(option) + " has been deleted from admin " + sNick + " -----")
 		else:
 			self.sendmsg(sNick, "Failed to delete option. Does or has somebody deleted it already?")
 	
@@ -620,9 +627,9 @@ class titlebot(znc.Module):
 	# sNick: string, chanInfo: ChanInfo, enabled: boolean
 	def voteSetEnabled(self, sNick, chanInfo, enabled):
 		if not chanInfo.enabled and enabled:
-			self.sendmsg(chanInfo.name, "Voting has been enabled!")
+			self.sendmsg(chanInfo.name, "----- Voting has been ENABLED! -----")
 		elif chanInfo.enabled and not enabled:
-			self.sendmsg(chanInfo.name, "Voting has been disabled!")
+			self.sendmsg(chanInfo.name, "----- Voting has been DISABLED! -----")
 		else:
 			self.sendmsg(sNick, "Voting was already " + "enabled" if enabled else "disabled")
 			
@@ -640,11 +647,13 @@ class titlebot(znc.Module):
 	def printOptions(self, sNick, chanInfo, public):
 		msgTo = sNick if not public else chanInfo.name
 		
-		self.sendmsg(msgTo, "Vote options (first number: id)")
+		self.sendmsg(msgTo, "----- Vote options (first number: id) -----")
 		
 		for option in chanInfo.options:
 			if not option.deleted:
-				self.sendmsg(msgTo, str(option.id + 1) + ") " + option.text + " (" + str(option.votes) + " votes)")
+				self.sendmsg(msgTo, "  " + str(option.id + 1) + ") " + option.text + " (" + str(option.votes) + " votes)")
+		
+		self.sendmsg(msgTo, "----- Vote options end -----")
 	
 	
 	# sNick: string, chanInfo: ChanInfo, public: boolean
@@ -654,13 +663,15 @@ class titlebot(znc.Module):
 		options = chanInfo.options.copy()
 		options.sort(key=lambda option :option.votes, reverse=True)
 		
-		self.sendmsg(msgTo, "Vote results (first number is the place, NOT the id")
+		self.sendmsg(msgTo, "----- Vote results (first number is the place, NOT the id) -----")
 		
 		index = 1
 		for option in options:
 			if not option.deleted:
-				self.sendmsg(msgTo, str(index) + ". " + option.text + " (Option " + str(option.id) + " with " + str(option.votes) + " votes)")
+				self.sendmsg(msgTo, "  " + str(index) + ". " + option.text + " (Option " + str(option.id) + " with " + str(option.votes) + " votes)")
 				index += 1
+		
+		self.sendmsg(msgTo, "----- Vote results end -----")
 	
 	
 	# sNick: string, chanInfo: ChanInfo, public: boolean
@@ -674,26 +685,30 @@ class titlebot(znc.Module):
 		for userId, optionId in chanInfo.userVotes.items():
 			options[optionId].append(userId)
 		
-		self.sendmsg(msgTo, "Votes:")
+		self.sendmsg(msgTo, "----- Vote list begin -----")
 		
 		for optionId, userIds in enumerate(options):
 			option = chanInfo.options[optionId]
 			# assert not option.deleted
-			self.sendmsg(msgTo, "Option " + str(optionId + 1) + ": " + option.text)
+			self.sendmsg(msgTo, "  Option " + str(optionId + 1) + ": " + option.text)
 			
 			for userId in userIds:
 				userInfo = self.userdb[userId]
 				
 				self.sendmsg(msgTo, "    " + str(userInfo.id) + ": " + userInfo.nick + "!" + userInfo.ident + "@" + userInfo.host + " known as " + str(userInfo.nickuser) + " stale=" + str(userInfo.stale))
+		
+		self.sendmsg(msgTo, "----- Vote list end -----")
 	
 	
 	# sNick: string, chanInfo: ChanInfo
 	def printUsers(self, sNick, chanInfo):
-		self.sendmsg(sNick, "Known users:")
+		self.sendmsg(sNick, "----- Known user list begin -----")
 		
 		for userInfo in self.userdb.values():
-			self.sendmsg(sNick, str(userInfo.id) + ": " + userInfo.nick + "!" + userInfo.ident + "@" + userInfo.host + " known as " + str(userInfo.nickuser) + " stale=" + str(userInfo.stale))
+			self.sendmsg(sNick, "  " + str(userInfo.id) + ": " + userInfo.nick + "!" + userInfo.ident + "@" + userInfo.host + " known as " + str(userInfo.nickuser) + " stale=" + str(userInfo.stale))
 		
+		self.sendmsg(sNick, "----- Known user list end -----")
+	
 	
 	def sendmsg(self, to, msg):
 		self.PutIRC("PRIVMSG " + to + " :" +msg)
