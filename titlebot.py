@@ -440,6 +440,9 @@ class titlebot(znc.Module):
 		elif cmd == "auth":
 			adminRequired = False
 			runCmd = lambda :self.userAuth(sNick)
+		elif cmd == "userdel":
+			if len(tokens) > 0 and tokens[0].isdigit():
+				runCmd = lambda :self.userDelete(int(tokens[0]), sNick)
 		elif cmd == "enable":
 			runCmd = lambda :self.voteSetEnabled(sNick, chan, True)
 		elif cmd == "disable":
@@ -484,7 +487,7 @@ class titlebot(znc.Module):
 		
 		self.requestWhois(sNick, lambda whoisNick, error :self.executeMessage(nickw, chan, userRequired, adminRequired, runCmd, error))
 	
-		
+	
 	# nick: NickWrapper, chan: ChanInfo, userRequired: boolean, adminRequired: boolean, runCmd: function(), error: boolean
 	def executeMessage(self, nickw, chan, userRequired, adminRequired, runCmd, error):
 		if error:
@@ -523,7 +526,8 @@ class titlebot(znc.Module):
 		self.sendmsg(to, "  help    <channel> [public | admin]  Print help public in channel or print admin help")
 		self.sendmsg(to, "  revoke  <channel> [<user_id>]       Revoke vote")
 		self.sendmsg(to, "  del     <channel> <option_id>       Delete voting option <option_id>")
-		self.sendmsg(to, "  enable  <channel>                   Enable/resume voting.")
+		self.sendmsg(to, "  userdel <channel> <user_id>         Delete the user from all internate databases and revoke his votes")
+		self.sendmsg(to, "  enable  <channel>                   Enable/resume voting")
 		self.sendmsg(to, "  disable <channel>                   Disable/pause voting. Voting might be continued later")
 		self.sendmsg(to, "  reset   <channel>                   Resets the voting, drops all options and votes")
 		self.sendmsg(to, "  list    <channel> [results | votes | users] [public]  Lists voting results, votes or users, optionally public in channel")
@@ -622,6 +626,24 @@ class titlebot(znc.Module):
 			self.sendmsg(chanInfo.name, "----- Option " + str(option) + " has been deleted from admin " + sNick + " -----")
 		else:
 			self.sendmsg(sNick, "Failed to delete option. Does or has somebody deleted it already?")
+	
+	
+	# userId: int, sAdmin: string
+	def userDelete(self, userId, sAdmin):
+		userInfo = userdb[userId]
+		
+		# revoke all votes
+		for chanInfo in chans:
+			if userId in chanInfo.userVotes:
+				result = chanInfo.revoke(userId)
+				self.sendmsg(chanInfo.name, "Vote from user " + userInfo.nick + " for option " + str(result + 1) + " has been revoked")
+		
+		# and delete user, invalidate whoisdb record (do not delete to avoid potential race conditions)
+		userInfo.removeFromDBs()
+		if sNick in whoisdb:
+			whoisdb[sNick].valid = false
+		
+		self.sendmsg(sAdmin, "User " + sNick + " has been deleted from all databases")
 	
 	
 	# sNick: string, chanInfo: ChanInfo, enabled: boolean
