@@ -422,14 +422,11 @@ class titlebot(znc.Module):
 				runCmd = lambda :self.userVote(sNick, chan, int(tokens[0]))
 		elif cmd == "revoke":
 			if len(tokens) > 0:
-				revokeNick = channel.FindNick(tokens[0])
-				if revokeNick is not None:
-					runCmd = lambda :self.userRevoke(str(revokeNick.GetName()), chan, True)
-				else:
-					errStr = "User not found!"
+				if tokens[0].isdigit():
+					runCmd = lambda :self.userRevoke(sNick, int(tokens[0]), chan, True)
 			else:
 				adminRequired = False
-				runCmd = lambda :self.userRevoke(sNick, chan)
+				runCmd = lambda :self.userRevoke(sNick, None, chan)
 		elif cmd == "add":
 			if len(tokens) > 0:
 				adminRequired = False
@@ -582,10 +579,20 @@ class titlebot(znc.Module):
 			self.sendmsg(sNick, "Vote rejected, you have already voted for option " + str(-result - 1))
 	
 	
-	# sNick: string, chanInfo: ChanInfo, admin: boolean
-	def userRevoke(self, sNick, chanInfo, admin=False):
+	# sNick: string, userId: int, chanInfo: ChanInfo, admin: boolean
+	def userRevoke(self, sNick, userId, chanInfo, admin=False):
+		userNick = sNick
+			
+		if userId is None: # allowed
+			userId = self.activeNicks[userNick]
+		else:
+			if userId not in self.userdb:
+				self.sendmsg(sAdmin, "Unknown user id: " + str(userId))
+				return
+			
+			userNick = self.userdb[userId].nick
+			
 		msgTo = sNick if not admin else chanInfo.name
-		userId = self.activeNicks[sNick]
 		
 		if not chanInfo.enabled and not admin:
 			self.sendmsg(sNick, "Voting has been disabled")
