@@ -104,8 +104,8 @@ class UserInfo:
 	def removeFromDBs(self):
 		if self.id in self.mod.userdb: # not really required ...
 			del self.mod.userdb[self.id]
-		if self.id in self.mod.activeNicks:
-			del self.mod.activeNicks[self.id]
+		if self.nick in self.mod.activeNicks:
+			del self.mod.activeNicks[self.nick]
 		if self.nick in self.mod.nickdb and self.id in self.mod.nickdb[self.nick]:
 			self.mod.nickdb[self.nick].remove(self.id)
 		if self.host in self.mod.hostdb:
@@ -212,6 +212,7 @@ class ChanInfo:
 			return -1
 		
 		self.options[oldVote].votes -= 1
+		del self.userVotes[user]
 		
 		return oldVote
 	
@@ -327,8 +328,8 @@ class titlebot(znc.Module):
 	
 	
 	def reset(self):
-		for name, chan in self.chans.items():
-			chan.reset()
+		for chanInfo in self.chans.values():
+			chanInfo.reset()
 		
 		self.userdb.clear()
 		self.activeNicks.clear()
@@ -603,7 +604,7 @@ class titlebot(znc.Module):
 		if result >= 0:
 			self.sendmsg(msgTo, "Vote from user " + sNick + " for option " + str(result + 1) + " has been revoked")
 		else:
-			self.sendmsg(msgTo, "Failed: No vote to revoke from user " + sNick)
+			self.sendmsg(sNick, "Failed: No vote to revoke from user " + sNick)
 	
 	
 	# sNick: string, chanInfo: ChanInfo, option: string
@@ -637,18 +638,25 @@ class titlebot(znc.Module):
 	
 	# userId: int, sAdmin: string
 	def userDelete(self, userId, sAdmin):
-		userInfo = userdb[userId]
+		if userId not in self.userdb:
+			self.sendmsg(sAdmin, "Unknown user id: " + str(userId))
+			return
+		
+		userInfo = self.userdb[userId]
+		sNick = userInfo.nick
 		
 		# revoke all votes
-		for chanInfo in chans:
+		for chanInfo in self.chans.values():
 			if userId in chanInfo.userVotes:
 				result = chanInfo.revoke(userId)
-				self.sendmsg(chanInfo.name, "Vote from user " + userInfo.nick + " for option " + str(result + 1) + " has been revoked")
+				self.sendmsg(chanInfo.name, "Vote from user " + sNick + " for option " + str(result + 1) + " has been revoked")
 		
-		# and delete user, invalidate whoisdb record (do not delete to avoid potential race conditions)
+		# and delete all user related records
 		userInfo.removeFromDBs()
-		if sNick in whoisdb:
-			whoisdb[sNick].valid = false
+		if sNick in self.whoisdb:
+			del self.whoisdb[sNick]
+		if sNick in self.whoisCallbacks:
+			del self.whoisCallbacks[sNick]
 		
 		self.sendmsg(sAdmin, "User " + sNick + " has been deleted from all databases")
 	
@@ -697,7 +705,7 @@ class titlebot(znc.Module):
 		index = 1
 		for option in options:
 			if not option.deleted:
-				self.sendmsg(msgTo, "  " + str(index) + ". " + option.text + " (Option " + str(option.id) + " with " + str(option.votes) + " votes)")
+				self.sendmsg(msgTo, "  " + str(index) + ". " + option.text + " (Option " + str(option.id + 1) + " with " + str(option.votes) + " votes)")
 				index += 1
 		
 		self.sendmsg(msgTo, "----- Vote results end -----")
