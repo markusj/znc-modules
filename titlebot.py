@@ -726,13 +726,14 @@ class titlebot(znc.Module):
 		
 		for optionId, userIds in enumerate(options):
 			option = chanInfo.options[optionId]
-			# assert not option.deleted
-			self.sendmsg(msgTo, "  Option " + str(optionId + 1) + ": " + option.text)
 			
-			for userId in userIds:
-				userInfo = self.userdb[userId]
+			if not option.votes > 0:			
+				self.sendmsg(msgTo, "  Option " + str(optionId + 1) + " (deleted=" + str(option.deleted) + ": " + option.text)
+			
+				for userId in userIds:
+					userInfo = self.userdb[userId]
 				
-				self.sendmsg(msgTo, "    " + str(userInfo.id) + ": " + userInfo.nick + "!" + userInfo.ident + "@" + userInfo.host + " known as " + str(userInfo.nickuser) + " stale=" + str(userInfo.stale))
+					self.sendmsg(msgTo, "    " + str(userInfo.id) + ": " + userInfo.nick + "!" + userInfo.ident + "@" + userInfo.host + " known as " + str(userInfo.nickuser) + " stale=" + str(userInfo.stale))
 		
 		self.sendmsg(msgTo, "----- Vote list end -----")
 	
