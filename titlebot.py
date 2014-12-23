@@ -602,9 +602,9 @@ class titlebot(znc.Module):
 		result = chanInfo.revoke(userId)
 		
 		if result >= 0:
-			self.sendmsg(msgTo, "Vote from user " + sNick + " for option " + str(result + 1) + " has been revoked")
+			self.sendmsg(msgTo, "Vote by user " + sNick + " for option " + str(result + 1) + " has been revoked")
 		else:
-			self.sendmsg(sNick, "Failed: No vote to revoke from user " + sNick)
+			self.sendmsg(sNick, "Failed: No vote to revoke for user " + sNick)
 	
 	
 	# sNick: string, chanInfo: ChanInfo, option: string
@@ -629,11 +629,11 @@ class titlebot(znc.Module):
 			for uid in revoked:
 				userInfo = self.userdb[uid]
 				
-				self.sendmsg(chanInfo.name, "----- Vote from user " + userInfo.nick + " for option " + str(option) + " has been revoked -----")
+				self.sendmsg(chanInfo.name, "----- Vote by user " + userInfo.nick + " for option " + str(option) + " has been revoked -----")
 				
 			self.sendmsg(chanInfo.name, "----- Option " + str(option) + " has been deleted from admin " + sNick + " -----")
 		else:
-			self.sendmsg(sNick, "Failed to delete option. Does or has somebody deleted it already?")
+			self.sendmsg(sNick, "Failed to delete option. Does it exist or has it already been deleted by someone else?")
 	
 	
 	# userId: int, sAdmin: string
@@ -649,7 +649,7 @@ class titlebot(znc.Module):
 		for chanInfo in self.chans.values():
 			if userId in chanInfo.userVotes:
 				result = chanInfo.revoke(userId)
-				self.sendmsg(chanInfo.name, "Vote from user " + sNick + " for option " + str(result + 1) + " has been revoked")
+				self.sendmsg(chanInfo.name, "Vote by user " + sNick + " for option " + str(result + 1) + " has been revoked")
 		
 		# and delete all user related records
 		userInfo.removeFromDBs()
@@ -700,7 +700,7 @@ class titlebot(znc.Module):
 		options = chanInfo.options.copy()
 		options.sort(key=lambda option :option.votes, reverse=True)
 		
-		self.sendmsg(msgTo, "----- Vote results (first number is the place, NOT the id) -----")
+		self.sendmsg(msgTo, "----- Vote results (first number is the placement, NOT the id) -----")
 		
 		index = 1
 		for option in options:
