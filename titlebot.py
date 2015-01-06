@@ -704,7 +704,7 @@ class titlebot(znc.Module):
 		
 		index = 1
 		for option in options:
-			if not option.deleted:
+			if not option.deleted and option.votes > 0:
 				self.sendmsg(msgTo, "  " + str(index) + ". " + option.text + " (Option " + str(option.id + 1) + " with " + str(option.votes) + " votes)")
 				index += 1
 		
