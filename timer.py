@@ -25,8 +25,10 @@ class timer(znc.Module):
 		parts = parts[2].lstrip().partition(" ") # remove whitespace and continue
 		
 		argnetwork = parts[0]
+		sNetwork = str(self.GetNetwork().GetName())
+		sUser = str(self.GetUser().GetUserName())
 		
-		if not argnetwork == self.GetNetwork().GetName().lower():
+		if not argnetwork == sNetwork.lower():
 			return znc.CONTINUE # network does not match
 		
 		parts = parts[2].lstrip().partition(" ") # remove whitespace and continue
@@ -39,7 +41,7 @@ class timer(znc.Module):
 			
 			return znc.HALTCORE # do not forward
 		
-		t = self.CreateTimer(delay_cmd_timer, interval=int(argdelay), label="delay_cmd_timer-" + str(self.timer_generation))
+		t = self.CreateTimer(delay_cmd_timer, interval=int(argdelay), label="delay_cmd_timer-" + sUser + "-" + sNetwork + "-" + str(self.timer_generation))
 		t.command = argcmd
 		
 		self.timer_generation += 1
