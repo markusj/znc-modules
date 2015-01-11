@@ -11,9 +11,9 @@ Contains (at the time this README has been updated):
 
 ## timer.py
 
-Requires ZNC >= 1.5 (the hook OnSendToIRC() which is required to intercept raw IRC commands is supported in ZNC master since 2014-03-04)
+Requires ZNC >= 1.5 (the hook OnSendToIRC() which is required to intercept raw IRC commands is supported in ZNC master since 2014-03-04). If the module is used in an environment where different users have network configurations with identical names, a ZNC build newer than 2015-01-11 is required.
 
-This module can only be loaded as network module. It will forward the passed `<COMMAND>` with a delay of `<DELAY>` seconds to IRC network `<NETWORK>`.
+This module can only be loaded as network module. It will forward the passed `<COMMAND>` with a delay of `<DELAY>` seconds to the assigned IRC network.
 
 The timer module responds to direct messages
 
@@ -21,7 +21,7 @@ The timer module responds to direct messages
 
 and raw IRC commands (as sent by send_raw or perform).
 
-`timer <NETWORK> <DELAY> <COMMAND>`
+`timer <DELAY> <COMMAND>`
 
 ## awaymonitor.py
 
