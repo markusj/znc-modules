@@ -791,7 +791,7 @@ class titlebot(znc.Module):
 	
 	def OnChanMsg(self, nick, channel, sMessage): #EModRet OnChanMsg (CNick &Nick, CChan &Channel, CString &sMessage)
 		sChan = str(channel.GetName())
-		message = str(sMessage)
+		message = str(sMessage).lstrip()
 		
 		if sChan in self.chans:
 			chan = self.chans[sChan]
