@@ -70,7 +70,8 @@ class UserInfo:
 		# issue a whois request to figure out if the user is authed
 		self.authWhois()
 		# assign id only if all previous steps succeeded 
-		self.id = len(mod.userdb)
+		self.id = mod.userCount
+		mod.userCount += 1
 		# add to user databases
 		self.addToDBs()
 	
@@ -258,6 +259,7 @@ class titlebot(znc.Module):
 	
 	# chans				dict channel -> ChanInfo
 	# userdb			dict userId -> UserInfo
+	# userCount			int
 	# activeNicks		dict nick -> userId
 	# nickdb 			dict nick -> list of userId
 	# hostdb			dict hostname -> userId
@@ -267,6 +269,7 @@ class titlebot(znc.Module):
 	def __init__(self):
 		self.chans = { }
 		self.userdb = { }
+		self.userCount = 0
 		self.activeNicks = { }
 		self.nickdb = { }
 		self.hostdb = { }
@@ -333,6 +336,7 @@ class titlebot(znc.Module):
 			chanInfo.reset()
 		
 		self.userdb.clear()
+		self.userCount = 0
 		self.activeNicks.clear()
 		self.nickdb.clear()
 		self.hostdb.clear()
