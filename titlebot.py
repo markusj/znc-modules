@@ -566,6 +566,8 @@ class titlebot(znc.Module):
 			userId = self.activeNicks[sNick]
 			userInfo = self.userdb[userId]
 			userInfo.readWhoisData(self.whoisdb[sNick])
+			
+			self.sendmsg(sNick, "Authentificated")
 		else:
 			self.sendmsg(sNick, "Error: Expected to have whois information about you, but this was not the case.")
 	
