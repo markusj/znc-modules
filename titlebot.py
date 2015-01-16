@@ -878,7 +878,7 @@ class titlebot(znc.Module):
 			chan = self.chans[sChan]
 			
 			if len(message) > 1 and message[0] == chan.activator:
-				self.parseMessage(message[1:], nick, channel)
+				self.parseMessage(message[1:].lstrip(), nick, channel)
 		
 		return znc.HALTCORE
 	
