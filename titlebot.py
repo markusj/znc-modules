@@ -9,7 +9,7 @@ import znc
 
 
 class VotingOption:
-	# id
+	# id			int
 	# text			string
 	# votes			int
 	# deleted		boolean
@@ -32,6 +32,7 @@ class NickWrapper:
 		self.nick = str(znick.GetNick())
 		self.ident = str(znick.GetIdent())
 		self.host = str(znick.GetHost())
+
 
 
 class WhoisData:
@@ -259,7 +260,7 @@ class titlebot(znc.Module):
 	# userdb			dict userId -> UserInfo
 	# activeNicks		dict nick -> userId
 	# nickdb 			dict nick -> list of userId
-	# hostdb			dict hostname -> list of userId
+	# hostdb			dict hostname -> userId
 	# whoisdb			dict nick -> WhoisData
 	# whoisCallbacks 	dict nick -> list callback(string nick, bool error)
 	
@@ -473,6 +474,8 @@ class titlebot(znc.Module):
 				userRequired = False
 				adminRequired = False
 				runCmd = lambda :self.printOptions(sNick, chan, False)
+		elif cmd == "dump":
+			runCmd = lambda :self.dumpState(sNick)
 		else:
 			return # bad command, ignore
 		
@@ -529,6 +532,7 @@ class titlebot(znc.Module):
 		self.sendmsg(to, "  disable <channel>                   Disable/pause voting. Voting might be continued later")
 		self.sendmsg(to, "  reset   <channel>                   Resets the voting, drops all options and votes")
 		self.sendmsg(to, "  list    <channel> [results | votes | users] [public]  Lists voting results, votes or users, optionally public in channel")
+		self.sendmsg(to, "  dump                                Dumps all internal state")
 	
 	
 	# sNick: string
@@ -746,6 +750,77 @@ class titlebot(znc.Module):
 			self.sendmsg(sNick, "  " + str(userInfo.id) + ": " + userInfo.nick + "!" + userInfo.ident + "@" + userInfo.host + " known as " + str(userInfo.nickuser) + " stale=" + str(userInfo.stale))
 		
 		self.sendmsg(sNick, "----- Known user list end -----")
+	
+	
+	def dumpState(self, to):
+		self.sendmsg(to, "----- chans -----")
+		# chans				dict channel -> ChanInfo
+		for name, info in self.chans.items():
+			self.sendmsg(to, "  name: " + info.name + " " + name)
+			self.sendmsg(to, "  activator: " + info.activator)
+			self.sendmsg(to, "  ----- admins begin -----")
+			# admins		list of string
+			for admin in info.admins:
+				self.sendmsg(to, "    admin: " + admin)
+			self.sendmsg(to, "  ----- admins end -----")
+			self.sendmsg(to, "  ----- options begin -----")
+			# options		list of VotingOption
+			for option in info.options:
+				self.sendmsg(to, "    id: " + str(option.id))
+				self.sendmsg(to, "    text: " + option.text)
+				self.sendmsg(to, "    votes: " + str(option.votes))
+				self.sendmsg(to, "    deleted: " + str(option.deleted))
+				self.sendmsg(to, "    ----------")
+			self.sendmsg(to, "  ----- options end -----")
+			self.sendmsg(to, "  ----- userVotes begin -----")
+			# userVotes		dict userId -> index for options
+			for user, index in info.userVotes.items():
+				self.sendmsg(to, "    " + str(user) + " -> " + str(index))
+			self.sendmsg(to, "  ----- userVotes end -----")
+			self.sendmsg(to, "  enabled: " + str(info.enabled))
+			self.sendmsg(to, "----------")
+		
+		self.sendmsg(to, "----- userdb -----")
+		# userdb			dict userId -> UserInfo
+		for userid, info in self.userdb.items():
+			#userinfo
+			self.sendmsg(to, "  " + str(userid) + " -> id: " + str(info.id))
+			self.sendmsg(to, "  nick: " + info.nick)
+			self.sendmsg(to, "  ident: " + info.ident)
+			self.sendmsg(to, "  host: " + info.host)
+			self.sendmsg(to, "  nickuser: " + str(info.nickuser))
+			self.sendmsg(to, "  stale: " + str(info.stale))
+			self.sendmsg(to, "----------")
+		
+		self.sendmsg(to, "----- whoisdb -----")
+		# whoisdb			dict nick -> WhoisData
+		for name, info in self.whoisdb.items():
+			self.sendmsg(to, "  " + name + " -> nick: " + info.nick)
+			self.sendmsg(to, "  ident: " + info.ident)
+			self.sendmsg(to, "  host: " + info.host)
+			self.sendmsg(to, "  nickuser: " + str(info.nickuser))
+			self.sendmsg(to, "  valid: " + str(info.valid))
+			self.sendmsg(to, "  error: " + str(info.error))
+			self.sendmsg(to, "----------")
+		
+		self.sendmsg(to, "----- activeNicks -----")
+		# activeNicks		dict nick -> userId
+		for name, userId in self.activeNicks.items():
+			self.sendmsg(to, name + " -> " + str(userId))
+		
+		self.sendmsg(to, "----- nickdb -----")
+		# nickdb 			dict nick -> list of userId
+		for name, userIds in self.nickdb.items():
+			for userId in userIds:
+				self.sendmsg(to, name + " -> " + str(userId))
+		
+		self.sendmsg(to, "----- hostdb -----")
+		# hostdb			dict hostname -> list of userId
+		for name, userId in self.hostdb.items():
+			self.sendmsg(to, name + " -> " + str(userId))
+		
+		# whoisCallbacks 	dict nick -> list callback(string nick, bool error)
+		# not printed yet
 	
 	
 	def sendmsg(self, to, msg):
