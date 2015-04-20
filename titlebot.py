@@ -612,7 +612,7 @@ class titlebot(znc.Module):
 		result = chanInfo.revoke(userId)
 		
 		if result >= 0:
-			self.sendmsg(msgTo, "Vote by user " + sNick + " for option " + str(result + 1) + " has been revoked")
+			self.sendmsg(msgTo, "----- Vote by user " + sNick + " for option " + str(result + 1) + " has been revoked")
 		else:
 			self.sendmsg(sNick, "Failed: No vote to revoke for user " + sNick)
 	
@@ -628,7 +628,7 @@ class titlebot(znc.Module):
 		if result >= 0:
 			self.sendmsg(chanInfo.name, "----- Option " + str(result + 1) + " added: " + option)
 		else:
-			self.sendmsg(sNick, "Failed to add option")
+			self.sendmsg(sNick, "----- Failed to add option")
 	
 	
 	# sNick: string, chanInfo: ChanInfo, option: int
@@ -641,7 +641,7 @@ class titlebot(znc.Module):
 				
 				self.sendmsg(chanInfo.name, "----- Vote by user " + userInfo.nick + " for option " + str(option) + " has been revoked -----")
 				
-			self.sendmsg(chanInfo.name, "----- Option " + str(option) + " has been deleted from admin " + sNick + " -----")
+			self.sendmsg(chanInfo.name, "----- Option " + str(option) + " has been deleted by admin " + sNick + " -----")
 		else:
 			self.sendmsg(sNick, "Failed to delete option. Does it exist or has it already been deleted by someone else?")
 	
@@ -659,7 +659,7 @@ class titlebot(znc.Module):
 		for chanInfo in self.chans.values():
 			if userId in chanInfo.userVotes:
 				result = chanInfo.revoke(userId)
-				self.sendmsg(chanInfo.name, "Vote by user " + sNick + " for option " + str(result + 1) + " has been revoked")
+				self.sendmsg(chanInfo.name, "----- Vote by user " + sNick + " for option " + str(result + 1) + " has been revoked")
 		
 		# and delete all user related records
 		userInfo.removeFromDBs()
@@ -687,7 +687,7 @@ class titlebot(znc.Module):
 	def voteReset(self, sNick, chanInfo):
 		chanInfo.reset()
 		
-		self.sendmsg(chanInfo.name, "All votes have been reset")
+		self.sendmsg(chanInfo.name, "----- All votes have been reset -----")
 	
 	
 	# sNick: string, chanInfo: ChanInfo, public: boolean
@@ -827,6 +827,8 @@ class titlebot(znc.Module):
 		
 		# whoisCallbacks 	dict nick -> list callback(string nick, bool error)
 		# not printed yet
+		
+		self.sendmsg(to, "----- dump end -----")
 	
 	
 	def sendmsg(self, to, msg):
