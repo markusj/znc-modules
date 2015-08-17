@@ -452,6 +452,8 @@ class titlebot(znc.Module):
 			runCmd = lambda :self.voteSetEnabled(sNick, chan, False)
 		elif cmd == "reset":
 			runCmd = lambda :self.voteReset(sNick, chan)
+		elif cmd == "hard-reset":
+			runCmd = lambda :self.hardReset(sNick)
 		elif cmd == "list":
 			if len(tokens) > 0:
 				tokens[0] = tokens[0].lower()
@@ -537,6 +539,7 @@ class titlebot(znc.Module):
 		self.sendmsg(to, "  reset   <channel>                   Resets the voting, drops all options and votes")
 		self.sendmsg(to, "  list    <channel> [results | votes | users] [public]  Lists voting results, votes or users, optionally public in channel")
 		self.sendmsg(to, "  dump                                Dumps all internal state")
+		self.sendmsg(to, "  hard-reset                          Resets all internal state")
 	
 	
 	# sNick: string
@@ -688,6 +691,13 @@ class titlebot(znc.Module):
 		chanInfo.reset()
 		
 		self.sendmsg(chanInfo.name, "----- All votes have been reset -----")
+	
+	
+	# sNick: string
+	def hardReset(self, sNick):
+		self.PutModule("Hard reset requested by user " + sNick)
+		
+		self.reset()
 	
 	
 	# sNick: string, chanInfo: ChanInfo, public: boolean
@@ -856,8 +866,8 @@ class titlebot(znc.Module):
 		return len(self.chans) > 0
 	
 	
-	def OnIRCConnected(self):
-		self.reset()
+	#def OnIRCConnected(self):
+	#	self.reset()
 	
 	
 	def OnModCommand(self, sCommand): # const CString &sCommand
