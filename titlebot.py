@@ -138,7 +138,7 @@ class UserInfo:
 			return False
 		else:
 			# whois either matched nick or nickuser -> claim is valid, accept
-			readWhoisData(whoisData)
+			self.readWhoisData(whoisData)
 			self.stale = False
 		
 			return True
